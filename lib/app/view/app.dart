@@ -34,7 +34,12 @@ class AppView extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: const Color(0xFF2A48DF),
-        appBarTheme: const AppBarTheme(color: Color(0xFF2A48DF)),
+        appBarTheme: Theme.of(context).appBarTheme.copyWith(
+              color: const Color(0xFF2A48DF),
+              titleTextStyle: const TextStyle(
+                color: Color(0xFFFFFFFF),
+              ),
+            ),
         colorScheme: ColorScheme.fromSwatch(
           accentColor: const Color(0xFF2A48DF),
         ),
@@ -42,6 +47,7 @@ class AppView extends StatelessWidget {
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ButtonStyle(
             backgroundColor: WidgetStateProperty.all(const Color(0xFF2A48DF)),
+            foregroundColor: WidgetStateProperty.all(const Color(0xFFFFFFFF)),
           ),
         ),
         textTheme: GoogleFonts.poppinsTextTheme(),

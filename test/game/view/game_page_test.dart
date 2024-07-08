@@ -79,7 +79,13 @@ void main() {
           Builder(
             builder: (context) => Scaffold(
               floatingActionButton: FloatingActionButton(
-                onPressed: () => Navigator.of(context).push(GamePage.route()),
+                onPressed: () => Navigator.of(context).push(
+                  GamePage.route(
+                    players: 2,
+                    useOnlyOn: false,
+                    basicMode: false,
+                  ),
+                ),
               ),
             ),
           ),
@@ -100,7 +106,9 @@ void main() {
     testWidgets('renders GameView', (tester) async {
       await tester.runAsync(() async {
         await tester.pumpApp(
-          const GamePage(),
+          const GamePage(
+            players: 3,
+          ),
           preloadCubit: preloadCubit,
         );
         expect(find.byType(GameView), findsOneWidget);
@@ -131,13 +139,18 @@ void main() {
       await tester.pumpApp(
         BlocProvider.value(
           value: audioCubit,
-          child: Material(child: GameView(game: game)),
+          child: Material(
+            child: GameView(
+              game: game,
+              players: 3,
+            ),
+          ),
         ),
       );
 
       expect(find.byIcon(Icons.volume_up), findsOneWidget);
 
-      controller.add(AudioState(volume: 0));
+      controller.add(AudioState());
       await tester.pump();
 
       expect(find.byIcon(Icons.volume_off), findsOneWidget);
@@ -157,12 +170,17 @@ void main() {
       await tester.pumpApp(
         BlocProvider.value(
           value: audioCubit,
-          child: Material(child: GameView(game: game)),
+          child: Material(
+            child: GameView(
+              game: game,
+              players: 3,
+            ),
+          ),
         ),
       );
 
       await tester.tap(find.byIcon(Icons.volume_up));
-      controller.add(AudioState(volume: 0));
+      controller.add(AudioState());
       await tester.pump();
       verify(audioCubit.toggleVolume).called(1);
 

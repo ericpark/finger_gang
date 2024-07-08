@@ -1,5 +1,4 @@
 import 'package:finger_gang/game/game.dart';
-import 'package:finger_gang/gen/assets.gen.dart';
 import 'package:finger_gang/l10n/l10n.dart';
 import 'package:finger_gang/loading/cubit/cubit.dart';
 import 'package:flame/game.dart' hide Route;
@@ -8,14 +7,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class GamePage extends StatelessWidget {
-  const GamePage({required this.players, super.key});
+  const GamePage({
+    required this.players,
+    this.useOnlyOn = false,
+    this.basicMode = false,
+    super.key,
+  });
 
   final int players;
+  final bool useOnlyOn;
+  final bool basicMode;
 
-  static Route<void> route({required int players}) {
+  static Route<void> route({
+    required int players,
+    required bool useOnlyOn,
+    required bool basicMode,
+  }) {
     return MaterialPageRoute<void>(
       builder: (_) => GamePage(
         players: players,
+        useOnlyOn: useOnlyOn,
+        basicMode: basicMode,
       ),
     );
   }
@@ -28,16 +40,31 @@ class GamePage extends StatelessWidget {
       },
       child: Scaffold(
         appBar: AppBar(),
-        body: SafeArea(child: GameView(players: players)),
+        body: SafeArea(
+          child: GameView(
+            players: players,
+            useOnlyOn: useOnlyOn,
+            basicMode: basicMode,
+          ),
+        ),
       ),
     );
   }
 }
 
 class GameView extends StatefulWidget {
-  const GameView({required this.players, super.key, this.game});
+  const GameView({
+    required this.players,
+    this.useOnlyOn = false,
+    this.basicMode = false,
+    super.key,
+    this.game,
+  });
 
   final int players;
+  final bool useOnlyOn;
+  final bool basicMode;
+
   final FlameGame? game;
 
   @override
@@ -78,9 +105,17 @@ class _GameViewState extends State<GameView> {
         );
     return Stack(
       children: [
-        //Positioned.fill(child: GameWidget(game: _game!)),
-        Positioned.fill(child: FingersView(numberOfPlayers: widget.players)),
-
+        if (!widget.basicMode)
+          Positioned.fill(
+            child: FingersView(
+              numberOfPlayers: widget.players,
+              useOnlyOn: widget.useOnlyOn,
+            ),
+          ),
+        if (widget.basicMode)
+          Positioned.fill(
+            child: FingersViewBasic(numberOfPlayers: widget.players),
+          ),
         Align(
           alignment: Alignment.topRight,
           child: BlocBuilder<AudioCubit, AudioState>(

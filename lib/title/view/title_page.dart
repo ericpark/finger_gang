@@ -35,6 +35,9 @@ class _TitleViewState extends State<TitleView> {
   int players = 3;
   int minPlayers = 2;
   int maxPlayers = 5;
+
+  bool useOnlyOn = false;
+  bool basicMode = false;
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -43,6 +46,7 @@ class _TitleViewState extends State<TitleView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
+          const Spacer(),
           Row(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -80,13 +84,62 @@ class _TitleViewState extends State<TitleView> {
               ),
             ],
           ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(
+                height: 64,
+                child: Center(
+                  child: Text(
+                    'Only Use On:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              Switch.adaptive(
+                value: useOnlyOn,
+                onChanged: (val) => setState(() {
+                  useOnlyOn = !useOnlyOn;
+                  basicMode = false;
+                }),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(
+                height: 64,
+                child: Center(
+                  child: Text(
+                    'Basic Mode:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              Switch.adaptive(
+                value: basicMode,
+                onChanged: (val) => setState(() {
+                  useOnlyOn = false;
+                  basicMode = !basicMode;
+                }),
+              ),
+            ],
+          ),
+          const Spacer(),
           SizedBox(
             width: 250,
             height: 64,
             child: ElevatedButton(
               onPressed: () {
                 Navigator.of(context).push<void>(
-                  GamePage.route(players: players),
+                  GamePage.route(
+                    players: players,
+                    useOnlyOn: useOnlyOn,
+                    basicMode: basicMode,
+                  ),
                 );
               },
               child: Center(child: Text(l10n.titleButtonStart)),

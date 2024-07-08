@@ -1,14 +1,23 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:animated_switcher_plus/animated_switcher_plus.dart';
 import 'package:finger_gang/game/game.dart';
 import 'package:finger_gang/title/view/title_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class FingersView extends StatefulWidget {
-  const FingersView({required this.numberOfPlayers, super.key});
+  const FingersView({
+    required this.numberOfPlayers,
+    this.useOnlyOn = false,
+    super.key,
+  });
 
   final int numberOfPlayers;
+
+  // When this is false, it will only evaluate if all fingers are on the screen
+  final bool useOnlyOn;
 
   @override
   State<FingersView> createState() => _FingersViewState();
@@ -33,6 +42,30 @@ class _FingersViewState extends State<FingersView> {
     super.initState();
   }
 
+  void detectPress(int i) {
+    if (status == RoundStatus.finished) return;
+    if (status == RoundStatus.waiting) return;
+
+    if (status == RoundStatus.ready || status == RoundStatus.playing) {
+      setState(() {
+        if (players[i].status.isPlaying) {
+          players[i] = players[i].copyWith(ready: true);
+        } else {
+          players[i] = players[i].copyWith(ready: false);
+        }
+      });
+    }
+
+    final playersOn =
+        players.where((p) => p.ready && p.status.isPlaying).length;
+    final remainingPlayers = players.where((p) => p.status.isPlaying).length;
+
+    // IF ALL FINGERS ARE ON = START
+    if (status == RoundStatus.ready && playersOn == remainingPlayers) {
+      start();
+    }
+  }
+
   List<Widget> calculateCircleCoordinates(
     int numberOfPoints,
     double avatarSize,
@@ -53,37 +86,17 @@ class _FingersViewState extends State<FingersView> {
         Align(
           alignment: Alignment(x, y),
           child: GestureDetector(
-            onLongPressStart: (details) {
-              if (status == RoundStatus.finished) return;
-              if (status == RoundStatus.waiting) return;
-
+            onTapDown: (details) {
               if (status == RoundStatus.ready ||
                   status == RoundStatus.playing) {
-                setState(() {
-                  if (players[i].status.isPlaying) {
-                    players[i] = players[i].copyWith(ready: true);
-                    //color = Colors.amber;
-                  } else {
-                    players[i] = players[i].copyWith(ready: false);
-                    /*if (players[i].status == PlayerStatus.won) {
-                      color = Colors.green;
-                    }
-                    if (players[i].status == PlayerStatus.lost) {
-                      color = Colors.red;
-                    }*/
-                  }
-                });
+                HapticFeedback.lightImpact();
               }
-
-              final playersOn =
-                  players.where((p) => p.ready && p.status.isPlaying).length;
-              final remainingPlayers =
-                  players.where((p) => p.status.isPlaying).length;
-
-              // IF ALL FINGERS ARE ON = START
-              if (status == RoundStatus.ready &&
-                  playersOn == remainingPlayers) {
-                start();
+            },
+            onLongPressStart: (details) {
+              detectPress(i);
+              if (status == RoundStatus.ready ||
+                  status == RoundStatus.playing) {
+                HapticFeedback.heavyImpact();
               }
             },
             onLongPressEnd: (details) {
@@ -92,24 +105,11 @@ class _FingersViewState extends State<FingersView> {
               // Keep showing whatever the locked in color is
               if (status == RoundStatus.ready ||
                   status == RoundStatus.playing) {
-                /* final remainingPlayers =
-                    players.where((p) => p.status.isPlaying).length;
-
-                final playersOn =
-                    players.where((p) => p.ready && p.status.isPlaying).length;
-*/
                 setState(() {
                   if (players[i].status.isPlaying) {
                     players[i] = players[i].copyWith(ready: false);
-                    //color = Colors.grey;
                   } else {
                     players[i] = players[i].copyWith(ready: false);
-                    /*if (players[i].status == PlayerStatus.won) {
-                      color = Colors.green;
-                    }
-                    if (players[i].status == PlayerStatus.lost) {
-                      color = Colors.red;
-                    }*/
                   }
                 });
               }
@@ -226,7 +226,8 @@ class _FingersViewState extends State<FingersView> {
   Future<void> start() async {
     final remainingPlayers = players.where((p) => p.status.isPlaying).length;
     final random = Random().nextInt(remainingPlayers + 1);
-    final onWins = Random().nextBool();
+    // if useOnlyOn is true, this always be true, otherwise random
+    final onWins = widget.useOnlyOn || Random().nextBool();
 
     setState(() {
       status = RoundStatus.playing;
@@ -236,6 +237,7 @@ class _FingersViewState extends State<FingersView> {
       setState(() {
         message = '$i';
       });
+      await HapticFeedback.heavyImpact();
       await Future<void>.delayed(const Duration(milliseconds: 900));
     }
 
@@ -261,6 +263,10 @@ class _FingersViewState extends State<FingersView> {
     setState(() {
       message = msg ?? 'Game Over!';
     });
+    unawaited(HapticFeedback.heavyImpact());
+    unawaited(HapticFeedback.heavyImpact());
+    unawaited(HapticFeedback.heavyImpact());
+
     await Future<void>.delayed(const Duration(seconds: 3)).then(
       (value) => Navigator.of(context).pop(TitlePage.route()),
     );
