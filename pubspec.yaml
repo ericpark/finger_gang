@@ -29,6 +29,8 @@ dependencies:
 dev_dependencies:
   bloc_test: ^9.1.6
   flame_test: ^1.16.0
+  flutter_launcher_icons: "^0.13.1"
+  flutter_native_splash: ^2.4.0
   flutter_test:
     sdk: flutter
   mockingjay: ^0.5.0
@@ -43,3 +45,27 @@ flutter:
     - assets/audio/
     - assets/images/
     - assets/licenses/poppins/
+    - assets/logo/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  #remove_alpha_ios: true
+  image_path: "assets/logo/logo.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  web:
+    generate: false
+    #image_path: "path/to/image.png"
+    #background_color: "#hexcode"
+    #theme_color: "#hexcode"
+  windows:
+    generate: false
+    #image_path: "path/to/image.png"
+    icon_size: 48 # min:48, max:256, default: 48
+  macos:
+    generate: false
+    #image_path: "path/to/image.png"
+
+flutter_native_splash:
+  color: "#fefefe"
+  image: assets/logo/brand_logo_sm.png
