@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:finger_gang/l10n/l10n.dart';
 import 'package:finger_gang/loading/loading.dart';
+import 'package:finger_gang/title/title.dart';
 import 'package:flame/cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,6 +20,7 @@ class App extends StatelessWidget {
             AudioCache(prefix: ''),
           )..loadSequentially(),
         ),
+        BlocProvider(create: (_) => TitleCubit()..init()),
       ],
       child: const AppView(),
     );

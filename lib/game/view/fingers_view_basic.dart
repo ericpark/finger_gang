@@ -216,12 +216,17 @@ class _FingersViewBasicState extends State<FingersViewBasic> {
   }
 
   Future<void> end({String? msg}) async {
+    unawaited(HapticFeedback.vibrate());
+
     setState(() {
       message = msg ?? 'Game Over!';
+      players = players.map((p) {
+        if (p.status.isDone) return p;
+
+        return p.copyWith(ready: false, status: PlayerStatus.lost);
+      }).toList();
     });
-    unawaited(HapticFeedback.heavyImpact());
-    unawaited(HapticFeedback.heavyImpact());
-    unawaited(HapticFeedback.heavyImpact());
+    unawaited(HapticFeedback.vibrate());
 
     await Future<void>.delayed(const Duration(seconds: 3)).then(
       (value) => Navigator.of(context).pop(TitlePage.route()),

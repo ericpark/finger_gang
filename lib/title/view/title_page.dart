@@ -1,8 +1,10 @@
-import 'package:finger_gang/game/game.dart';
 import 'package:finger_gang/l10n/l10n.dart';
+import 'package:finger_gang/title/title.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:infinite_carousel/infinite_carousel.dart';
 
-class TitlePage extends StatelessWidget {
+class TitlePage extends StatefulWidget {
   const TitlePage({super.key});
 
   static Route<void> route() {
@@ -12,141 +14,113 @@ class TitlePage extends StatelessWidget {
   }
 
   @override
+  State<TitlePage> createState() => _TitlePageState();
+}
+
+class _TitlePageState extends State<TitlePage> {
+  late InfiniteScrollController controller;
+
+  final _itemExtent = 200.0;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = InfiniteScrollController();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    controller.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.titleAppBarTitle),
+      appBar: AppBar(title: Text(l10n.titleAppBarTitle)),
+      body: BlocBuilder<TitleCubit, TitleState>(
+        builder: (context, state) {
+          return SafeArea(
+            child: Flex(
+              direction: Axis.vertical,
+              children: [
+                SizedBox(
+                  height: 200,
+                  child: InfiniteCarousel.builder(
+                    itemCount: 3,
+                    itemExtent: _itemExtent,
+                    // center: true,
+                    //anchor: 0.0,
+                    velocityFactor: 0.85,
+                    onIndexChanged: (index) {
+                      setState(() {
+                        context.read<TitleCubit>().changeGame(index);
+                      });
+                    },
+                    controller: controller,
+                    //axisDirection: Axis.horizontal,
+                    itemBuilder: (context, itemIndex, realIndex) {
+                      final currentOffset = _itemExtent * realIndex;
+                      return AnimatedBuilder(
+                        animation: controller,
+                        builder: (context, child) {
+                          // ignore: unnecessary_parenthesis
+                          final diff = (controller.offset - currentOffset);
+                          const maxPadding = 10.0;
+                          final carouselRatio = _itemExtent / maxPadding;
+
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              top: (diff / carouselRatio).abs(),
+                              bottom: (diff / carouselRatio).abs(),
+                            ),
+                            child: child,
+                          );
+                        },
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(2),
+                            child: Center(
+                              child: Text(
+                                state.games[itemIndex],
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const Expanded(child: TitleView()),
+              ],
+            ),
+          );
+        },
       ),
-      body: const SafeArea(child: TitleView()),
     );
   }
 }
 
-class TitleView extends StatefulWidget {
+class TitleView extends StatelessWidget {
   const TitleView({super.key});
 
   @override
-  State<TitleView> createState() => _TitleViewState();
-}
-
-class _TitleViewState extends State<TitleView> {
-  int players = 3;
-  int minPlayers = 2;
-  int maxPlayers = 5;
-
-  bool useOnlyOn = false;
-  bool basicMode = false;
-  @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          const Spacer(),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton.icon(
-                icon: const Icon(Icons.remove),
-                onPressed: players > minPlayers
-                    ? () {
-                        setState(() {
-                          players--;
-                        });
-                      }
-                    : null,
-                label: const Text(''),
-              ),
-              SizedBox(
-                height: 64,
-                child: Center(
-                  child: Text(
-                    'Players: $players',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              TextButton.icon(
-                icon: const Icon(Icons.add),
-                onPressed: players < maxPlayers
-                    ? () {
-                        setState(() {
-                          players++;
-                        });
-                      }
-                    : null,
-                label: const Text(''),
-              ),
-            ],
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(
-                height: 64,
-                child: Center(
-                  child: Text(
-                    'Only Use On:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              Switch.adaptive(
-                value: useOnlyOn,
-                onChanged: (val) => setState(() {
-                  useOnlyOn = !useOnlyOn;
-                  basicMode = false;
-                }),
-              ),
-            ],
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(
-                height: 64,
-                child: Center(
-                  child: Text(
-                    'Basic Mode:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              Switch.adaptive(
-                value: basicMode,
-                onChanged: (val) => setState(() {
-                  useOnlyOn = false;
-                  basicMode = !basicMode;
-                }),
-              ),
-            ],
-          ),
-          const Spacer(),
-          SizedBox(
-            width: 250,
-            height: 64,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push<void>(
-                  GamePage.route(
-                    players: players,
-                    useOnlyOn: useOnlyOn,
-                    basicMode: basicMode,
-                  ),
-                );
-              },
-              child: Center(child: Text(l10n.titleButtonStart)),
-            ),
-          ),
-        ],
-      ),
+    return BlocBuilder<TitleCubit, TitleState>(
+      builder: (context, state) {
+        return Center(
+          child: switch (state.games[state.selectedGameIndex]) {
+            'Fingers' => const FingersTitleView(),
+            'Fingers Survival' => const FingersSurvivalView(),
+            'Spinner' => const SpinnerTitleView(),
+            'Struggle Bus' => const Text('Struggle Bus'),
+            String() => Container(),
+          },
+        );
+      },
     );
   }
 }
